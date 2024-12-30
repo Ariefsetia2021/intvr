@@ -64,7 +64,7 @@
             <div id="barang-container" class="form-group">
                 <div class="barang-item row mb-3">
                     <div class="col-md-3">
-                        <label for="barang_id">Barang:</label>
+                        <label for="barang_id">Barang</label>
                         <select name="barang[0][id]" class="form-control barang-select" required>
                             <option value="" selected disabled>Pilih Barang</option>
                             @foreach($barang as $brg)
@@ -73,15 +73,15 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label>Jumlah:</label>
+                        <label>Jumlah</label>
                         <input type="number" name="barang[0][jumlah]" class="form-control" placeholder="Jumlah" required>
                     </div>
                     <div class="col-md-3">
-                        <label>Harga per Satuan:</label>
+                        <label>Harga per Satuan</label>
                         <input type="number" name="barang[0][harga]" class="form-control" placeholder="Harga per Satuan" step="0.01" readonly>
                     </div>
                     <div class="col-md-2">
-                        <label>Info Harga:</label>
+                        <label>Info Harga</label>
                         <input type="text" class="form-control info-harga" placeholder="Info Harga" readonly>
                     </div>
                     <div class="col-md-2">

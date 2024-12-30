@@ -14,7 +14,6 @@ class CreateBarangKeluar extends Migration
             $table->unsignedBigInteger('barang_id'); // Foreign key untuk barang
             $table->integer('jumlah'); // Jumlah barang keluar
             $table->decimal('harga_per_satuan', 10, 2); // Harga per satuan barang
-            $table->timestamps(); // Created_at dan updated_at
 
             // Define foreign key constraints
             $table->foreign('nofaktur')

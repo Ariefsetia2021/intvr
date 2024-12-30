@@ -17,24 +17,27 @@ class BarangKeluarController extends Controller
 {
     public function store(Request $request)
     {
-        // Log data input untuk debugging
+        // Log input data untuk debugging
         Log::info('Request Data:', $request->all());
 
+        // Validasi input
         $request->validate([
-            'customer_id' => 'required|exists:customer,id', // Sesuaikan nama tabel 'customers'
-            'gudang_id' => 'required|exists:gudang,id', // Sesuaikan nama tabel 'gudangs'
+            'customer_id' => 'required|exists:customer,id', // Pastikan tabel customers benar
+            'gudang_id' => 'required|exists:gudang,id', // Pastikan tabel gudangs benar
             'barang' => 'required|array',
-            'barang.*.id' => 'required|exists:brg,id',
-            'barang.*.jumlah' => 'required|integer|min:1',
-            'barang.*.harga' => 'required|numeric|min:0',
-            'tanggal_keluar' => 'required|date',
+            'barang.*.id' => 'required|exists:brg,id', // Pastikan tabel brg benar
+            'barang.*.jumlah' => 'required|integer|min:1', // Minimal 1 unit
+            'barang.*.harga' => 'required|numeric|min:0', // Harga minimal 0
+            'tanggal_keluar' => 'required|date|date_format:Y-m-d', // Format tanggal valid (contoh: 2024-12-30)
         ]);
 
-        // Panggil generateNoFaktur sebelum transaksi
+
+        // Generate nomor faktur sebelum transaksi
         $noFaktur = $this->generateNoFaktur();
         Log::info('Generated No Faktur:', ['nofaktur' => $noFaktur]);
 
         try {
+            // Mulai transaksi database
             DB::transaction(function () use ($request, $noFaktur) {
                 // Simpan transaksi
                 $transaksi = Transaksi::create([
@@ -45,6 +48,7 @@ class BarangKeluarController extends Controller
                 ]);
                 Log::info('Transaksi Created:', $transaksi->toArray());
 
+                // Loop untuk setiap barang
                 foreach ($request->barang as $item) {
                     $stokData = Stok::where('barang_id', $item['id'])
                         ->where('gudang_id', $request->gudang_id)
@@ -54,15 +58,16 @@ class BarangKeluarController extends Controller
                         throw new Exception('Stok barang tidak mencukupi untuk barang ID: ' . $item['id']);
                     }
 
+                    // Simpan data BarangKeluar
                     BarangKeluar::create([
-                        'nofaktur' => $transaksi->nofaktur, // Menggunakan 'no_faktur' sesuai dengan model BarangKeluar
+                        'nofaktur' => $transaksi->nofaktur,
                         'barang_id' => $item['id'],
                         'jumlah' => $item['jumlah'],
                         'harga_per_satuan' => $item['harga'],
                     ]);
                     Log::info('BarangKeluar Created:', ['barang_id' => $item['id']]);
 
-                    // Update stok
+                    // Update stok barang
                     $stokData->jumlah -= $item['jumlah'];
                     $stokData->save();
                     Log::info('Stok Updated:', $stokData->toArray());
@@ -71,6 +76,7 @@ class BarangKeluarController extends Controller
 
             return redirect()->route('stok')->with('success', 'Data barang keluar berhasil ditambahkan.');
         } catch (Exception $e) {
+            // Log error jika terjadi masalah
             Log::error('Error menyimpan barang keluar: ' . $e->getMessage(), [
                 'request_data' => $request->all(),
             ]);
@@ -81,6 +87,7 @@ class BarangKeluarController extends Controller
 
     public function create()
     {
+        // Ambil data barang, gudang, dan customer untuk form
         $barang = Barang::all();
         $gudang = Gudang::all();
         $customer = Customer::all();
@@ -90,6 +97,7 @@ class BarangKeluarController extends Controller
 
     private function generateNoFaktur()
     {
+        // Generate nomor faktur dengan format: F-YYYYMMDD-0001
         $lastFaktur = Transaksi::latest('nofaktur')->value('nofaktur');
         $number = $lastFaktur ? (int)substr($lastFaktur, -4) : 0;
 

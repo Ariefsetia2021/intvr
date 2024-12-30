@@ -13,7 +13,6 @@ class CreateTransaksi extends Migration
             $table->unsignedBigInteger('customer_id'); // Foreign key for customers
             $table->unsignedBigInteger('gudang_id'); // Foreign key for warehouses
             $table->date('tanggal_keluar'); // Date when items are out
-            $table->timestamps(); // Created_at and updated_at columns
 
             // Define foreign key constraints
             $table->foreign('customer_id')
